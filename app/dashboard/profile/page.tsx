@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { SessionProvider } from "@/components/session-provider";
 import { ProfileForm } from "@/components/profile-form";
 import { getProfile } from "@/app/actions/profile";
 
@@ -50,7 +49,6 @@ export default function ProfilePage() {
   if (!profile) return null;
 
   return (
-    <SessionProvider>
       <div className="p-6 lg:p-10 max-w-2xl mx-auto">
         <h1 className="font-display text-2xl sm:text-3xl font-bold tracking-tight mb-2">
           profile
@@ -102,6 +100,5 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
-    </SessionProvider>
   );
 }

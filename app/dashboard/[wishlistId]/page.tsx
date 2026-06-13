@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Plus, ExternalLink, Lock, Check } from "lucide-react";
-import { SessionProvider } from "@/components/session-provider";
 import { ItemActions } from "@/components/item-actions";
 import { getWishlist } from "@/app/actions/wishlist";
 
@@ -143,7 +142,6 @@ export default function WishlistDetailPage() {
   ).length;
 
   return (
-    <SessionProvider>
       <div className="p-6 lg:p-10 max-w-5xl mx-auto">
         {/* Back + Header */}
         <div className="mb-8">
@@ -319,6 +317,5 @@ export default function WishlistDetailPage() {
           </div>
         )}
       </div>
-    </SessionProvider>
   );
 }
