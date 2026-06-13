@@ -23,11 +23,11 @@ type ScrapeResult = {
 
 export default function AddItemPage() {
   return (
-    <SessionProvider>
-      <Suspense>
+    <Suspense>
+      <SessionProvider>
         <AddItemForm />
-      </Suspense>
-    </SessionProvider>
+      </SessionProvider>
+    </Suspense>
   );
 }
 

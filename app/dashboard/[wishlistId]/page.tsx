@@ -1,40 +1,44 @@
-import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-import { notFound } from "next/navigation";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Plus, ExternalLink, Lock, Check } from "lucide-react";
 import { SessionProvider } from "@/components/session-provider";
 import { ItemActions } from "@/components/item-actions";
+import { getWishlist } from "@/app/actions/wishlist";
 
-async function getWishlist(wishlistId: string) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+type Item = {
+  id: string;
+  title: string;
+  url: string;
+  description: string | null;
+  price: number | string | null;
+  currency: string | null;
+  imageUrl: string | null;
+  sourceSite: string | null;
+  notes: string | null;
+  status: string;
+  priority: string;
+  claimedBy: string | null;
+  addedAt: Date;
+};
 
-  if (!session?.user?.id) {
-    return null;
-  }
+type Tag = {
+  id: string;
+  name: string;
+  color: string;
+};
 
-  const wishlist = await prisma.wishlist.findFirst({
-    where: {
-      id: wishlistId,
-      userId: session.user.id,
-    },
-    include: {
-      items: {
-        orderBy: [
-          { status: "asc" },
-          { priority: "desc" },
-          { addedAt: "desc" },
-        ],
-      },
-      tags: true,
-    },
-  });
-
-  return wishlist;
-}
+type Wishlist = {
+  id: string;
+  title: string;
+  description: string | null;
+  coverEmoji: string;
+  isPublic: boolean;
+  items: Item[];
+  tags: Tag[];
+};
 
 function StatusBadge({ status }: { status: string }) {
   switch (status) {
@@ -64,31 +68,69 @@ function StatusBadge({ status }: { status: string }) {
 }
 
 function PriorityBadge({ priority }: { priority: string }) {
-  const colors = {
+  const colors: Record<string, string> = {
     HIGH: "bg-coral/30",
     MEDIUM: "bg-butter/30",
     LOW: "bg-sky/30",
   };
   return (
     <span
-      className={`px-2 py-0.5 border border-text/10 rounded-full text-[10px] font-medium ${colors[priority as keyof typeof colors] || "bg-cream"}`}
+      className={`px-2 py-0.5 border border-text/10 rounded-full text-[10px] font-medium ${colors[priority] || "bg-cream"}`}
     >
       {priority.toLowerCase()}
     </span>
   );
 }
 
-export default async function WishlistDetailPage({
-  params,
-}: {
-  params: Promise<{ wishlistId: string }>;
-}) {
-  const { wishlistId } = await params;
-  const wishlist = await getWishlist(wishlistId);
+function LoadingSkeleton() {
+  return (
+    <div className="p-6 lg:p-10 max-w-5xl mx-auto">
+      <div className="mb-8">
+        <div className="h-4 w-32 bg-text/5 rounded mb-4 animate-pulse" />
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-text/5 rounded-2xl animate-pulse" />
+            <div>
+              <div className="h-7 w-48 bg-text/5 rounded mb-2 animate-pulse" />
+              <div className="h-4 w-32 bg-text/5 rounded animate-pulse" />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="border-2 border-text/10 rounded-2xl p-4">
+            <div className="w-full h-36 bg-text/5 rounded-xl mb-3 animate-pulse" />
+            <div className="h-5 w-3/4 bg-text/5 rounded mb-2 animate-pulse" />
+            <div className="h-6 w-1/3 bg-text/5 rounded animate-pulse" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
-  if (!wishlist) {
-    notFound();
-  }
+export default function WishlistDetailPage() {
+  const params = useParams();
+  const router = useRouter();
+  const wishlistId = params.wishlistId as string;
+  const [wishlist, setWishlist] = useState<Wishlist | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getWishlist(wishlistId)
+      .then((data) => {
+        if (!data) {
+          router.push("/dashboard");
+        } else {
+          setWishlist(data as Wishlist);
+        }
+      })
+      .finally(() => setLoading(false));
+  }, [wishlistId, router]);
+
+  if (loading) return <LoadingSkeleton />;
+  if (!wishlist) return null;
 
   const availableCount = wishlist.items.filter(
     (i) => i.status === "AVAILABLE"

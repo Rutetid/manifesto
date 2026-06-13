@@ -17,6 +17,29 @@ const updateProfileSchema = z.object({
     .or(z.literal("")),
 });
 
+export async function getProfile() {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+
+  if (!session?.user?.id) {
+    return null;
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: {
+      name: true,
+      email: true,
+      username: true,
+      createdAt: true,
+      _count: { select: { wishlists: true } },
+    },
+  });
+
+  return user;
+}
+
 export async function updateProfile(data: { name: string; username?: string }) {
   const session = await auth.api.getSession({
     headers: await headers(),

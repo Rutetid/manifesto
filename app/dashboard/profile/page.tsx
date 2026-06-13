@@ -1,39 +1,53 @@
-import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+"use client";
+
+import { useEffect, useState } from "react";
 import { SessionProvider } from "@/components/session-provider";
 import { ProfileForm } from "@/components/profile-form";
+import { getProfile } from "@/app/actions/profile";
 
-async function getUser() {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+type Profile = {
+  name: string | null;
+  email: string;
+  username: string | null;
+  createdAt: Date;
+  _count: { wishlists: number };
+};
 
-  if (!session?.user?.id) {
-    redirect("/login");
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: {
-      name: true,
-      email: true,
-      username: true,
-      createdAt: true,
-      _count: { select: { wishlists: true } },
-    },
-  });
-
-  return user;
+function LoadingSkeleton() {
+  return (
+    <div className="p-6 lg:p-10 max-w-2xl mx-auto">
+      <div className="h-7 w-32 bg-text/5 rounded mb-2 animate-pulse" />
+      <div className="h-4 w-48 bg-text/5 rounded mb-8 animate-pulse" />
+      <div className="bg-white border-2 border-text rounded-2xl p-6 shadow-[4px_4px_0_var(--text)]">
+        <div className="flex items-center gap-4 mb-6">
+          <div className="w-16 h-16 bg-text/5 rounded-full animate-pulse" />
+          <div>
+            <div className="h-5 w-32 bg-text/5 rounded mb-2 animate-pulse" />
+            <div className="h-4 w-40 bg-text/5 rounded animate-pulse" />
+          </div>
+        </div>
+        <div className="space-y-4">
+          <div className="h-10 bg-text/5 rounded-xl animate-pulse" />
+          <div className="h-10 bg-text/5 rounded-xl animate-pulse" />
+          <div className="h-10 bg-text/5 rounded-xl animate-pulse" />
+        </div>
+      </div>
+    </div>
+  );
 }
 
-export default async function ProfilePage() {
-  const user = await getUser();
+export default function ProfilePage() {
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  if (!user) {
-    redirect("/login");
-  }
+  useEffect(() => {
+    getProfile()
+      .then(setProfile)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <LoadingSkeleton />;
+  if (!profile) return null;
 
   return (
     <SessionProvider>
@@ -50,24 +64,24 @@ export default async function ProfilePage() {
           {/* Avatar */}
           <div className="flex items-center gap-4 mb-6">
             <div className="w-16 h-16 rounded-full bg-lavender border-2 border-text flex items-center justify-center text-2xl font-bold">
-              {user.name?.[0]?.toUpperCase() || "?"}
+              {profile.name?.[0]?.toUpperCase() || "?"}
             </div>
             <div>
               <h2 className="font-display text-xl font-bold">
-                {user.name || "Anonymous"}
+                {profile.name || "Anonymous"}
               </h2>
-              <p className="text-text-muted text-sm">{user.email}</p>
+              <p className="text-text-muted text-sm">{profile.email}</p>
             </div>
           </div>
 
           {/* Form */}
           <ProfileForm
             user={{
-              name: user.name,
-              email: user.email,
-              username: user.username,
-              createdAt: user.createdAt,
-              wishlistCount: user._count.wishlists,
+              name: profile.name,
+              email: profile.email,
+              username: profile.username,
+              createdAt: profile.createdAt,
+              wishlistCount: profile._count.wishlists,
             }}
           />
 
@@ -76,13 +90,13 @@ export default async function ProfilePage() {
             <div className="flex items-center justify-between text-xs text-text-muted">
               <span>
                 member since{" "}
-                {user.createdAt.toLocaleDateString("en-IN", {
+                {new Date(profile.createdAt).toLocaleDateString("en-IN", {
                   month: "long",
                   year: "numeric",
                 })}
               </span>
               <span>
-                {user._count.wishlists} wishlists
+                {profile._count.wishlists} wishlists
               </span>
             </div>
           </div>

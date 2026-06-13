@@ -62,6 +62,45 @@ export async function deleteWishlist(id: string) {
   revalidatePath("/dashboard");
 }
 
+export async function getWishlists() {
+  const user = await requireAuth();
+
+  const wishlists = await prisma.wishlist.findMany({
+    where: { userId: user.id },
+    include: {
+      items: {
+        select: { id: true, status: true, imageUrl: true },
+      },
+    },
+    orderBy: { updatedAt: "desc" },
+  });
+
+  return wishlists;
+}
+
+export async function getWishlist(wishlistId: string) {
+  const user = await requireAuth();
+
+  const wishlist = await prisma.wishlist.findFirst({
+    where: {
+      id: wishlistId,
+      userId: user.id,
+    },
+    include: {
+      items: {
+        orderBy: [
+          { status: "asc" },
+          { priority: "desc" },
+          { addedAt: "desc" },
+        ],
+      },
+      tags: true,
+    },
+  });
+
+  return wishlist;
+}
+
 export async function toggleWishlistPublic(id: string) {
   const user = await requireAuth();
 
