@@ -209,3 +209,17 @@ body {
 .scroll-indicator {
   animation: bounce-down 1.5s ease-in-out infinite;
 }
+
+/* Loading Spinner */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}

@@ -92,6 +92,7 @@ export default function SignupPage() {
               fill="#EA4335"
             />
           </svg>
+          {loading && <span className="spinner" />}
           {loading ? "creating account..." : "continue with google"}
         </button>
 
@@ -184,6 +185,7 @@ export default function SignupPage() {
             disabled={loading}
             className="pill-btn w-full justify-center !text-sm"
           >
+            {loading && <span className="spinner" />}
             {loading ? "creating account..." : "create account"}
           </button>
         </form>

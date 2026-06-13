@@ -90,6 +90,7 @@ function LoginForm() {
               fill="#EA4335"
             />
           </svg>
+          {loading && <span className="spinner" />}
           {loading ? "signing in..." : "continue with google"}
         </button>
 
@@ -163,6 +164,7 @@ function LoginForm() {
             disabled={loading}
             className="pill-btn w-full justify-center !text-sm"
           >
+            {loading && <span className="spinner" />}
             {loading ? "signing in..." : "sign in"}
           </button>
         </form>
