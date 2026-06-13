@@ -3,6 +3,13 @@ import { NextRequest, NextResponse } from "next/server";
 const publicRoutes = ["/", "/login", "/signup", "/w"];
 const authRoutes = ["/login", "/signup"];
 
+function getSessionCookie(request: NextRequest) {
+  return (
+    request.cookies.get("__Secure-better-auth.session_token") ||
+    request.cookies.get("better-auth.session_token")
+  );
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -14,7 +21,7 @@ export async function middleware(request: NextRequest) {
   ) {
     // If user has a session cookie and visits auth routes, redirect to dashboard
     if (authRoutes.includes(pathname)) {
-      const sessionCookie = request.cookies.get("better-auth.session_token");
+      const sessionCookie = getSessionCookie(request);
       if (sessionCookie) {
         return NextResponse.redirect(new URL("/dashboard", request.url));
       }
@@ -23,7 +30,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Check session for protected routes
-  const sessionCookie = request.cookies.get("better-auth.session_token");
+  const sessionCookie = getSessionCookie(request);
 
   if (!sessionCookie) {
     const loginUrl = new URL("/login", request.url);

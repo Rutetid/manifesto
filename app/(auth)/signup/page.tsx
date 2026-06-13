@@ -20,15 +20,25 @@ export default function SignupPage() {
     setError("");
     setLoading(true);
 
-    const { error } = await signUp.email({
+    const { error: signupError } = await signUp.email({
       email,
       password,
       name,
     });
 
-    if (error) {
-      setError(error.message || "Something went wrong");
+    if (signupError) {
+      setError(signupError.message || "Something went wrong");
       setLoading(false);
+      return;
+    }
+
+    const { error: loginError } = await signIn.email({
+      email,
+      password,
+    });
+
+    if (loginError) {
+      router.push("/login");
       return;
     }
 
